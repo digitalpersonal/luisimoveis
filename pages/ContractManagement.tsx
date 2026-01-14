@@ -22,7 +22,8 @@ import {
   Sparkles,
   Printer,
   CalendarDays,
-  User as UserIcon
+  User as UserIcon,
+  Building
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { generatePropertyDescription } from '../services/geminiService';
@@ -31,6 +32,7 @@ interface Contract {
   id: string;
   title: string;
   client: string;
+  owner: string; // Adicionado campo proprietário
   value: string;
   date: string;
   status: 'ACTIVE' | 'PENDING' | 'TERMINATED';
@@ -39,9 +41,9 @@ interface Contract {
 }
 
 const INITIAL_CONTRACTS: Contract[] = [
-  { id: '1', title: 'Locação Residencial - AP-001', client: 'Ricardo Almeida', value: '4.500,00', date: '10/10/2023', status: 'ACTIVE', propertyCode: 'AP-001', model: 'Locação Residencial' },
-  { id: '2', title: 'Venda de Imóvel - CA-042', client: 'Carlos Ferreira', value: '3.450.000,00', date: '05/10/2023', status: 'PENDING', propertyCode: 'CA-042', model: 'Venda e Compra' },
-  { id: '3', title: 'Locação Comercial - LJ-012', client: 'Tech Solutions LTDA', value: '12.000,00', date: '28/09/2023', status: 'TERMINATED', propertyCode: 'LJ-012', model: 'Locação Comercial' },
+  { id: '1', title: 'Locação Residencial - AP-001', client: 'Marina Santos', owner: 'Ricardo Almeida', value: '4.500,00', date: '10/10/2023', status: 'ACTIVE', propertyCode: 'AP-001', model: 'Locação Residencial' },
+  { id: '2', title: 'Venda de Imóvel - CA-042', client: 'Carlos Ferreira', owner: 'Helena Costa', value: '3.450.000,00', date: '05/10/2023', status: 'PENDING', propertyCode: 'CA-042', model: 'Venda e Compra' },
+  { id: '3', title: 'Locação Comercial - LJ-012', client: 'Tech Solutions LTDA', owner: 'Ricardo Almeida', value: '12.000,00', date: '28/09/2023', status: 'TERMINATED', propertyCode: 'LJ-012', model: 'Locação Comercial' },
 ];
 
 const ContractManagement: React.FC = () => {
@@ -51,18 +53,26 @@ const ContractManagement: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [ownerFilter, setOwnerFilter] = useState('ALL'); // Novo estado para o filtro de proprietário
   const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
     model: 'Locação Residencial',
     property: '',
     client: '',
+    owner: '', // Adicionado ao form
     value: '',
     startDate: '',
     endDate: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Lista única de proprietários para o filtro
+  const ownersList = useMemo(() => {
+    const uniqueOwners = new Set(contracts.map(c => c.owner));
+    return Array.from(uniqueOwners).sort();
+  }, [contracts]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -80,6 +90,7 @@ const ContractManagement: React.FC = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.property) newErrors.property = 'Selecione um imóvel';
     if (!formData.client) newErrors.client = 'Selecione um cliente';
+    if (!formData.owner) newErrors.owner = 'Informe o proprietário';
     if (!formData.value) newErrors.value = 'Informe o valor';
     if (!formData.startDate) newErrors.startDate = 'Data de início é obrigatória';
     
@@ -164,6 +175,7 @@ const ContractManagement: React.FC = () => {
           id: (contracts.length + 1).toString(),
           title: `${formData.model} - ${formData.property}`,
           client: formData.client,
+          owner: formData.owner,
           value: formData.value,
           date: new Date().toLocaleDateString('pt-BR'),
           status: 'ACTIVE',
@@ -174,7 +186,7 @@ const ContractManagement: React.FC = () => {
         setContracts(prev => [newContract, ...prev]);
         setIsProcessingPdf(false);
         setShowGenerator(false);
-        setFormData({ model: 'Locação Residencial', property: '', client: '', value: '', startDate: '', endDate: '' });
+        setFormData({ model: 'Locação Residencial', property: '', client: '', owner: '', value: '', startDate: '', endDate: '' });
       }, 1000);
     }
   };
@@ -205,12 +217,14 @@ const ContractManagement: React.FC = () => {
   const filteredContracts = useMemo(() => {
     return contracts.filter(c => {
       const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
+      const matchesOwner = ownerFilter === 'ALL' || c.owner === ownerFilter;
       const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            c.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           c.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            c.propertyCode.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesOwner && matchesSearch;
     });
-  }, [contracts, statusFilter, searchTerm]);
+  }, [contracts, statusFilter, ownerFilter, searchTerm]);
 
   return (
     <div className="space-y-6 pb-20 animate-in fade-in duration-500">
@@ -275,13 +289,26 @@ const ContractManagement: React.FC = () => {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between">
-                    <span>Cliente</span>
+                    <span>Inquilino / Comprador</span>
                     {errors.client && <span className="text-rose-500 text-[9px] font-black">Obrigatório</span>}
                   </label>
                   <select name="client" value={formData.client} onChange={handleInputChange} className={`w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold outline-none transition-all ${errors.client ? 'border-rose-300 ring-2 ring-rose-50' : 'border-slate-200 focus:ring-2 focus:ring-indigo-500'}`}>
                     <option value="">Selecione...</option>
                     <option value="Marina Santos">Marina Santos</option>
                     <option value="Ricardo Almeida">Ricardo Almeida</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between">
+                    <span>Proprietário</span>
+                    {errors.owner && <span className="text-rose-500 text-[9px] font-black">Obrigatório</span>}
+                  </label>
+                  <select name="owner" value={formData.owner} onChange={handleInputChange} className={`w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold outline-none transition-all ${errors.owner ? 'border-rose-300 ring-2 ring-rose-50' : 'border-slate-200 focus:ring-2 focus:ring-indigo-500'}`}>
+                    <option value="">Selecione...</option>
+                    <option value="Ricardo Almeida">Ricardo Almeida</option>
+                    <option value="Helena Costa">Helena Costa</option>
+                    <option value="Tech Solutions LTDA">Tech Solutions LTDA</option>
                   </select>
                 </div>
 
@@ -320,15 +347,32 @@ const ContractManagement: React.FC = () => {
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex-1 relative min-w-[300px] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-            <input type="text" placeholder="Pesquisar contratos ativos..." className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <input type="text" placeholder="Pesquisar por cliente, proprietário ou código..." className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
           
-          <select className="px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 outline-none cursor-pointer" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="ALL">Status: Todos</option>
-            <option value="ACTIVE">Ativos</option>
-            <option value="PENDING">Pendentes</option>
-            <option value="TERMINATED">Encerrados</option>
-          </select>
+          <div className="flex gap-2">
+            <select 
+              className="px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 outline-none cursor-pointer hover:border-indigo-300 transition-colors" 
+              value={ownerFilter} 
+              onChange={(e) => setOwnerFilter(e.target.value)}
+            >
+              <option value="ALL">Proprietário: Todos</option>
+              {ownersList.map(owner => (
+                <option key={owner} value={owner}>{owner}</option>
+              ))}
+            </select>
+
+            <select 
+              className="px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 outline-none cursor-pointer hover:border-indigo-300 transition-colors" 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="ALL">Status: Todos</option>
+              <option value="ACTIVE">Ativos</option>
+              <option value="PENDING">Pendentes</option>
+              <option value="TERMINATED">Encerrados</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -346,9 +390,10 @@ const ContractManagement: React.FC = () => {
                 </span>
               </div>
               <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
-                <span className="flex items-center gap-1.5"><CalendarIcon size={12}/> {c.date}</span>
-                <span className="flex items-center gap-1.5"><UserIcon size={12}/> {c.client}</span>
-                <span className="text-indigo-600">R$ {c.value}</span>
+                <span className="flex items-center gap-1.5" title="Data de Emissão"><CalendarIcon size={12}/> {c.date}</span>
+                <span className="flex items-center gap-1.5" title="Inquilino/Comprador"><UserIcon size={12}/> {c.client}</span>
+                <span className="flex items-center gap-1.5" title="Proprietário"><Building size={12}/> {c.owner}</span>
+                <span className="text-indigo-600 font-black">R$ {c.value}</span>
               </div>
             </div>
             <div className="flex gap-2 no-print">
@@ -357,6 +402,13 @@ const ContractManagement: React.FC = () => {
             </div>
           </div>
         ))}
+
+        {filteredContracts.length === 0 && (
+          <div className="py-20 text-center bg-white rounded-[2rem] border border-slate-100 border-dashed">
+            <FileText size={48} className="mx-auto text-slate-200 mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Nenhum contrato encontrado</p>
+          </div>
+        )}
       </div>
     </div>
   );

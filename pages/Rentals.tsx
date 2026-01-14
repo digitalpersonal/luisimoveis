@@ -16,7 +16,7 @@ import {
 
 const MOCK_RENTALS = [
   { id: '1', property: 'Apartamento Moema', tenant: 'Marina Santos', owner: 'Ricardo Almeida', value: 4500, dueDay: 10, status: 'PAID', lastPayment: '10/10/2023' },
-  { id: '2', property: 'Casa Vila Mariana', tenant: 'Carlos Silva', owner: 'Helena Costa', value: 3200, dueDay: 05, status: 'PENDING', lastPayment: '05/09/2023' },
+  { id: '2', property: 'Casa Vila Mariana', tenant: 'Carlos Silva', owner: 'Helena Costa', value: 3200, dueDay: 5, status: 'PENDING', lastPayment: '05/09/2023' },
   { id: '3', property: 'Studio Itaim', tenant: 'Roberto Lima', owner: 'Ricardo Almeida', value: 2800, dueDay: 15, status: 'OVERDUE', lastPayment: '15/08/2023' },
 ];
 

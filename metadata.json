@@ -1,6 +1,6 @@
 {
-  "name": "Luís Imóveis - ERP & Portal Imobiliário",
-  "description": "Um sistema completo de gestão imobiliária (ERP) integrado a um portal público, com controle financeiro, gestão de contratos, vendas, locações e integração inteligente.",
+  "name": "Studio - Gestão Fitness",
+  "description": "Studio: Uma plataforma completa para gestão de academias, treinos funcionais e grupos de corrida.",
   "requestFramePermissions": [
     "camera",
     "microphone"

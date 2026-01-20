@@ -3,89 +3,112 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Luís Imóveis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Studio</title>
+    
+    <!-- PWA & Mobile Icons -->
+    <link rel="icon" type="image/jpeg" href="https://digitalfreeshop.com.br/logostudio/logo.jpg" />
+    <link rel="apple-touch-icon" href="https://digitalfreeshop.com.br/logostudio/logo.jpg" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#020617" />
+    
+    <!-- Apple Mobile Web App Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Studio">
+    
+    <!-- Android / General Mobile App Settings -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Studio">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                50: '#fff7ed',
+                100: '#ffedd5',
+                500: '#f97316', 
+                600: '#ea580c',
+                900: '#7c2d12',
+              },
+              dark: {
+                800: '#1e293b',
+                900: '#0f172a',
+                950: '#020617',
+              }
+            }
+          }
+        }
       }
-      /* Custom scrollbar */
+    </script>
+    <style>
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sar: env(safe-area-inset-right);
+        --sab: env(safe-area-inset-bottom);
+        --sal: env(safe-area-inset-left);
+      }
+      html, body {
+        background-color: #020617;
+        color: #f8fafc;
+        -webkit-tap-highlight-color: transparent;
+        /* Impede o navegador de redimensionar o texto automaticamente, corrigindo o erro de letras pequenas */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        padding-top: var(--sat);
+        padding-bottom: var(--sab);
+        padding-left: var(--sal);
+        padding-right: var(--sar);
+        overflow-x: hidden;
+      }
       ::-webkit-scrollbar {
         width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: #1e293b; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
+        background: #475569; 
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+        background: #64748b; 
       }
-
-      /* Estilos de Impressão Profissionais */
-      @media print {
-        /* Ocultar elementos de interface */
-        nav, header, aside, .no-print, button, .sidebar, .header {
-          display: none !important;
-        }
-        
-        /* Resetar layout para a página toda */
-        body, main, #root {
-          background: white !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100% !important;
-          height: auto !important;
-          overflow: visible !important;
-        }
-
-        /* Garantir que o conteúdo ocupe a largura total */
-        main {
-          display: block !important;
-          padding: 0 !important;
-        }
-
-        /* Melhorar visibilidade de tabelas e cartões */
-        .bg-white {
-          border: 1px solid #e2e8f0 !important;
-          box-shadow: none !important;
-        }
-
-        .text-indigo-600 {
-          color: #1e1b4b !important; /* Indigo escuro para melhor contraste */
-        }
-
-        /* Quebra de página inteligente */
-        tr, .card {
-          page-break-inside: avoid;
-        }
-        
-        h1, h2, h3 {
-          color: black !important;
-        }
+      @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+          animation: fadeInUp 0.5s ease-out forwards;
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "jspdf": "https://esm.sh/jspdf@^2.5.1"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0"
   }
 }
 </script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-slate-50 text-slate-900">
+  <body>
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

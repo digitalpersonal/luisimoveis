@@ -1,5 +1,5 @@
 {
-  "name": "luís-imóveis---erp-&-portal-imobiliário",
+  "name": "studio---gestão-fitness",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,13 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.3",
-    "react": "^19.2.3",
-    "lucide-react": "^0.562.0",
-    "@google/genai": "^1.35.0",
-    "react-router-dom": "^7.12.0",
-    "recharts": "^3.6.0",
-    "jspdf": "^2.5.1"
+    "@google/genai": "^1.31.0",
+    "react": "^19.2.1",
+    "lucide-react": "^0.556.0",
+    "recharts": "^3.5.1",
+    "react-dom": "^19.2.1",
+    "jspdf": "2.5.1",
+    "@supabase/supabase-js": "^2.89.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

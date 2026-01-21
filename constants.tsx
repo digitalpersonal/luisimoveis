@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export const MENU_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
   { id: 'leads', label: 'Leads / CRM', icon: <Filter size={20} />, path: '/leads' },
   { id: 'calendar', label: 'Agenda & Visitas', icon: <CalendarIcon size={20} />, path: '/calendar' },
   { id: 'properties', label: 'Imóveis', icon: <Home size={20} />, path: '/properties' },
@@ -37,7 +37,7 @@ export const MENU_ITEMS = [
   { id: 'reports', label: 'Relatórios', icon: <PieChart size={20} />, path: '/reports' },
   { id: 'chat', label: 'Comunicação', icon: <MessageSquare size={20} />, path: '/chat' },
   { id: 'client-portal', label: 'Portal do Cliente', icon: <UserCircle size={20} />, path: '/client-portal' },
-  { id: 'portal', label: 'Portal Público', icon: <Search size={20} />, path: '/portal' },
+  { id: 'portal', label: 'Portal Público', icon: <Search size={20} />, path: '/' },
   { id: 'settings', label: 'Configurações', icon: <Settings size={20} />, path: '/settings' },
 ];
 

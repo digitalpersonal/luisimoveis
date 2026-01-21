@@ -26,7 +26,9 @@ import {
   Copy,
   Webhook,
   Server,
-  Zap
+  Zap,
+  CalendarCheck,
+  Info
 } from 'lucide-react';
 import { UserRole, FinancialSettings, MercadoPagoSettings } from '../types';
 import { 
@@ -67,9 +69,11 @@ const SettingsPage: React.FC = () => {
 
   const handleFinancialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const isRate = name.includes('Rate');
+    
     setFinancialSettings(prev => ({
       ...prev,
-      [name]: parseFloat(value) / 100
+      [name]: isRate ? parseFloat(value) / 100 : parseInt(value)
     }));
   };
 
@@ -108,30 +112,30 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Configurações do Sistema</h1>
-        <p className="text-slate-500">Gerencie usuários, permissões e parâmetros da imobiliária.</p>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Configurações do Sistema</h1>
+        <p className="text-slate-500 font-medium">Controle total sobre as regras de negócio e integrações.</p>
       </div>
 
-      <div className="flex border-b border-slate-200 gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+      <div className="flex border-b border-slate-200 gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide no-print">
         {[
-          { id: 'users', label: 'Usuários e Permissões', icon: <User size={18}/> },
-          { id: 'financial', label: 'Taxas e Descontos', icon: <DollarSign size={18}/> },
-          { id: 'mercado-pago', label: 'Mercado Pago (Pix)', icon: <CreditCard size={18}/> },
-          { id: 'logs', label: 'Logs de Auditoria', icon: <History size={18}/> },
-          { id: 'company', label: 'Dados Institucionais', icon: <Building size={18}/> },
+          { id: 'users', label: 'Usuários', icon: <User size={18}/> },
+          { id: 'financial', label: 'Financeiro (Taxas)', icon: <DollarSign size={18}/> },
+          { id: 'mercado-pago', label: 'Pix Automático', icon: <CreditCard size={18}/> },
+          { id: 'logs', label: 'Auditoria', icon: <History size={18}/> },
+          { id: 'company', label: 'Institucional', icon: <Building size={18}/> },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 pb-4 text-sm font-semibold transition-colors relative ${
-              activeTab === tab.id ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+            className={`flex items-center gap-2 pb-4 text-xs font-black uppercase tracking-widest transition-all relative ${
+              activeTab === tab.id ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
             }`}
           >
             {tab.icon}
             {tab.label}
-            {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"></div>}
+            {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full"></div>}
           </button>
         ))}
       </div>
@@ -139,21 +143,21 @@ const SettingsPage: React.FC = () => {
       {activeTab === 'users' && (
         <div className="space-y-4 animate-in fade-in duration-300">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 text-lg">Colaboradores</h3>
-            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700">
-              <Plus size={18} /> Convidar Usuário
+            <h3 className="font-black text-slate-800 text-lg">Colaboradores</h3>
+            <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100">
+              <Plus size={18} /> Novo Usuário
             </button>
           </div>
           
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Nome</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Perfil</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Status</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Ações</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Perfil</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -161,31 +165,31 @@ const SettingsPage: React.FC = () => {
                     <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-xs">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400 text-xs shadow-inner">
                             {user.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-900">{user.name}</p>
-                            <p className="text-xs text-slate-500">{user.email}</p>
+                            <p className="text-sm font-black text-slate-900">{user.name}</p>
+                            <p className="text-[10px] text-slate-400 font-bold">{user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
+                        <span className="flex items-center gap-1.5 text-[9px] font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg uppercase tracking-wider border border-slate-200 shadow-sm">
                           <Shield size={12} className="text-indigo-500" />
                           {roleLabels[user.role]}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${
+                        <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border shadow-sm ${
                           user.status === 'Ativo' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
                         }`}>
                           {user.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-all">
-                          <MoreVertical size={16} />
+                        <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded-xl transition-all active:scale-90">
+                          <MoreVertical size={18} />
                         </button>
                       </td>
                     </tr>
@@ -198,86 +202,111 @@ const SettingsPage: React.FC = () => {
       )}
 
       {activeTab === 'financial' && (
-        <div className="max-w-3xl space-y-6 animate-in fade-in duration-300">
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl">
-                <DollarSign size={28} />
+        <div className="max-w-4xl space-y-6 animate-in fade-in duration-300">
+          <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-slate-100 shadow-sm space-y-12">
+            <div className="flex items-center gap-6">
+              <div className="p-5 bg-indigo-50 text-indigo-600 rounded-[2rem] shadow-inner">
+                <DollarSign size={32} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900">Configurações de Regras Financeiras</h3>
-                <p className="text-sm text-slate-500 font-medium">Defina como o sistema calcula multas e benefícios automaticamente.</p>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Parâmetros Financeiros</h3>
+                <p className="text-sm text-slate-500 font-medium">Defina as regras de cálculo automáticas para aluguéis e taxas.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   <TrendingDown size={14} className="text-emerald-500" />
                   Desconto de Pontualidade (%)
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <input 
                     type="number" 
                     name="discountRate"
                     value={Math.round(financialSettings.discountRate * 100)}
                     onChange={handleFinancialChange}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-black text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all group-hover:border-indigo-300"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                  <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">%</span>
                 </div>
+                <p className="text-[10px] text-slate-400 italic px-1">Benefício aplicado se pago antes do vencimento.</p>
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   <AlertCircle size={14} className="text-rose-500" />
                   Multa por Atraso (%)
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <input 
                     type="number" 
                     name="fineRate"
                     value={Math.round(financialSettings.fineRate * 100)}
                     onChange={handleFinancialChange}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-black text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all group-hover:border-indigo-300"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                  <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">%</span>
                 </div>
+                <p className="text-[10px] text-slate-400 italic px-1">Percentual fixo aplicado no 1º dia após vencimento (ou carência).</p>
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   <Clock size={14} className="text-amber-500" />
                   Juros de Mora Mensais (%)
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <input 
                     type="number" 
                     name="monthlyInterestRate"
                     value={Math.round(financialSettings.monthlyInterestRate * 100)}
                     onChange={handleFinancialChange}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-black text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all group-hover:border-indigo-300"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                  <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">%</span>
                 </div>
+                <p className="text-[10px] text-slate-400 italic px-1">Taxa calculada pro-rata die com base no mês.</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  <CalendarCheck size={14} className="text-indigo-500" />
+                  Período de Carência (Dias)
+                </label>
+                <div className="relative group">
+                  <input 
+                    type="number" 
+                    name="gracePeriod"
+                    value={financialSettings.gracePeriod}
+                    onChange={handleFinancialChange}
+                    className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all group-hover:border-indigo-300"
+                  />
+                  <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-sm">DIAS</span>
+                </div>
+                <p className="text-[10px] text-slate-400 italic px-1">Tolerância antes da aplicação de multas e juros.</p>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {saveSuccess && (
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm animate-in fade-in slide-in-from-left-2">
-                    <Check size={18} /> Regras salvas com sucesso!
+            <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-3">
+                {saveSuccess ? (
+                  <div className="flex items-center gap-2 text-emerald-600 font-black text-xs uppercase tracking-widest animate-in fade-in slide-in-from-left-2">
+                    <Check size={20} /> Regras Financeiras Atualizadas!
                   </div>
+                ) : (
+                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed max-w-xs text-center md:text-left">
+                     As alterações impactam imediatamente o cálculo de novos boletos e o Portal do Cliente.
+                   </p>
                 )}
               </div>
               <button 
                 onClick={handleSaveFinancial}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                className="w-full md:w-auto flex items-center justify-center gap-3 px-12 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-slate-900 transition-all shadow-xl shadow-indigo-100 active:scale-95 disabled:opacity-50 uppercase text-[10px] tracking-widest"
               >
                 {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-                Salvar Alterações
+                Salvar Regras da Imobiliária
               </button>
             </div>
           </div>
@@ -287,23 +316,22 @@ const SettingsPage: React.FC = () => {
       {activeTab === 'mercado-pago' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
           <div className="space-y-6">
-            {/* Bloco de Credenciais */}
-            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
               <div className="flex items-center gap-4">
                 <div className="p-4 bg-sky-50 text-sky-600 rounded-2xl">
                   <CreditCard size={28} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">Integração Mercado Pago</h3>
-                  <p className="text-sm text-slate-500 font-medium">Credenciais de API para pagamentos via Pix.</p>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Integração Mercado Pago</h3>
+                  <p className="text-sm text-slate-500 font-medium">Credenciais de API para automação Pix.</p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
                   <div>
-                    <p className="text-sm font-bold text-slate-900">Modo de Produção</p>
-                    <p className="text-[10px] text-slate-500 uppercase font-black">Cobranças Reais Ativadas</p>
+                    <p className="text-sm font-black text-slate-900">Modo de Produção</p>
+                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Cobranças Reais Ativadas</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input 
@@ -318,8 +346,8 @@ const SettingsPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <KeyIcon size={14}/> Public Key
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                    <KeyIcon size={14} className="text-sky-500"/> Public Key
                   </label>
                   <input 
                     type="text" 
@@ -327,13 +355,13 @@ const SettingsPage: React.FC = () => {
                     value={mpSettings.publicKey}
                     onChange={handleMpChange}
                     placeholder="APP_USR-..." 
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none transition-all" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono focus:ring-2 focus:ring-sky-500 outline-none transition-all" 
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <Lock size={14}/> Access Token
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                    <Lock size={14} className="text-sky-500"/> Access Token
                   </label>
                   <div className="relative">
                     <input 
@@ -342,7 +370,7 @@ const SettingsPage: React.FC = () => {
                       value={mpSettings.accessToken}
                       onChange={handleMpChange}
                       placeholder="APP_USR-..." 
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none transition-all pr-12" 
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono focus:ring-2 focus:ring-sky-500 outline-none transition-all pr-12" 
                     />
                     <button 
                       onClick={() => setShowToken(!showToken)}
@@ -354,206 +382,128 @@ const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-6 border-t border-slate-100">
                 <button 
                   onClick={handleSaveMp}
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-8 py-4 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-700 transition-all shadow-xl shadow-sky-100 active:scale-95 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-sky-600 text-white font-black rounded-2xl hover:bg-slate-900 transition-all shadow-xl shadow-sky-100 active:scale-95 disabled:opacity-50 text-[10px] uppercase tracking-widest"
                 >
                   {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-                  Salvar Credenciais
+                  Salvar Credenciais Mercado Pago
                 </button>
               </div>
             </div>
 
-            {/* Bloco de Notificação de Pagamento (Supabase Webhook) */}
-            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-               <div className="flex items-center gap-3">
-                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                    <Zap size={24} />
+            {/* Nova Seção: Webhook Notification */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-amber-50 text-amber-600 rounded-2xl">
+                  <Webhook size={28} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Endpoint de Webhook</h3>
+                  <p className="text-sm text-slate-500 font-medium">Configuração para Baixa Automática em tempo real.</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Copie a URL abaixo e cole no campo <b>"URL de Notificação"</b> dentro do painel do Mercado Pago para que o sistema Luís Imóveis receba os avisos de pagamento automaticamente.
+                </p>
+                <div className="flex gap-2">
+                  <div className="flex-1 p-4 bg-slate-900 text-emerald-400 rounded-2xl font-mono text-[10px] break-all border border-slate-800 shadow-inner">
+                    {mpSettings.webhookBaseUrl}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900">Supabase Webhook (IPN)</h3>
-                    <p className="text-xs text-slate-500 font-medium">URL da sua Edge Function para baixa automática.</p>
-                  </div>
-               </div>
-
-               <div className="space-y-6">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <Server size={14}/> URL da Edge Function (Supabase)
-                    </label>
-                    <input 
-                      type="text" 
-                      name="webhookBaseUrl"
-                      value={mpSettings.webhookBaseUrl}
-                      onChange={handleMpChange}
-                      placeholder="https://[PROJETO].supabase.co/functions/v1/mercadopago-webhook" 
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
-                    />
-                    <p className="text-[9px] text-slate-400 italic">Insira a URL completa que você criou no painel do Supabase.</p>
-                  </div>
-
-                  <div className="p-4 bg-slate-900 rounded-2xl flex items-center gap-3 group relative border border-slate-800">
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-[10px] font-black text-indigo-400 uppercase mb-1">Copiar para o Mercado Pago:</p>
-                      <p className="text-xs font-mono text-white truncate">{mpSettings.webhookBaseUrl}</p>
-                    </div>
-                    <button 
-                      onClick={() => copyToClipboard(mpSettings.webhookBaseUrl)}
-                      className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all shadow-sm shrink-0 active:scale-90"
-                      title="Copiar Link"
-                    >
-                      {webhookCopied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
-                    </button>
-                  </div>
-                  
-                  <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <p className="text-[10px] font-black text-indigo-800 uppercase mb-1 flex items-center gap-1.5">
-                      <Zap size={12}/> Por que o link do Supabase?
-                    </p>
-                    <p className="text-[11px] text-indigo-700 font-medium leading-relaxed">
-                      O Mercado Pago avisa ao seu <b>Backend no Supabase</b> quando um Pix é pago. Essa Edge Function então atualiza o status no seu banco de dados automaticamente. O domínio do site (frontend) não consegue "ouvir" esses avisos.
-                    </p>
-                  </div>
-               </div>
+                  <button 
+                    onClick={() => copyToClipboard(mpSettings.webhookBaseUrl)}
+                    className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
+                    title="Copiar URL"
+                  >
+                    {webhookCopied ? <Check size={20} className="text-emerald-500" /> : <Copy size={20} />}
+                  </button>
+                </div>
+                
+                <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                   <h4 className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                     <Zap size={12}/> Eventos a Subscrever:
+                   </h4>
+                   <ul className="text-[10px] font-bold text-amber-700 space-y-1 ml-4 list-disc">
+                     <li>payment</li>
+                     <li>mp_payment (se disponível)</li>
+                     <li>application_not_found</li>
+                   </ul>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><HelpCircle size={20}/></div>
-                <h3 className="font-bold text-slate-900">Onde colar no Mercado Pago?</h3>
+                <h3 className="font-black text-slate-900 tracking-tight text-lg">Guia de Configuração Pix</h3>
               </div>
-
-              <div className="space-y-6">
-                <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group">
-                  {/* Ilustração Visual Explicativa */}
-                  <div className="aspect-video bg-slate-50 p-4 flex flex-col">
-                    <div className="w-full h-8 bg-slate-200 rounded-t-lg flex items-center px-3 gap-2 border-b border-slate-300">
-                      <div className="w-2 h-2 rounded-full bg-rose-400"></div>
-                      <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                      <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                      <div className="ml-4 w-32 h-3 bg-slate-300 rounded"></div>
-                    </div>
-                    <div className="flex-1 flex gap-4 p-4">
-                      <div className="w-1/4 space-y-2">
-                        <div className="w-full h-3 bg-indigo-100 rounded"></div>
-                        <div className="w-full h-3 bg-slate-200 rounded"></div>
-                        <div className="w-full h-3 bg-sky-500 rounded ring-2 ring-sky-200"></div>
-                        <div className="w-full h-3 bg-indigo-600 rounded"></div>
-                      </div>
-                      <div className="flex-1 space-y-4">
-                        <div className="h-6 w-1/2 bg-slate-200 rounded"></div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="h-20 bg-white border-2 border-dashed border-sky-400 rounded-xl flex items-center justify-center flex-col gap-1">
-                             <span className="text-[8px] font-black text-sky-600 uppercase">Webhooks</span>
-                             <span className="text-[7px] text-slate-400">Colar Link do Supabase</span>
-                          </div>
-                          <div className="h-20 bg-slate-200 rounded-xl"></div>
-                        </div>
-                      </div>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                Para que o Pix funcione corretamente, você deve configurar o Mercado Pago seguindo estes passos:
+              </p>
+              <div className="space-y-4">
+                {[
+                  { step: '1', text: 'Acesse o Painel de Desenvolvedor (Mercado Pago Developers).', sub: 'Crie uma "Nova Aplicação" ou use uma existente.' },
+                  { step: '2', text: 'Obtenha suas Credenciais de Produção.', sub: 'Public Key e Access Token são obrigatórios para transações reais.' },
+                  { step: '3', text: 'Configurar Notificações IPN / Webhook.', sub: 'Vá em Notificações > Webhooks, cole a URL de Webhook exibida aqui e marque o evento "payment".' },
+                  { step: '4', text: 'Ative o modo de Produção.', sub: 'Lembre-se de ativar a chave acima "Modo de Produção" para começar a receber.' }
+                ].map((s, i) => (
+                  <div key={i} className="flex gap-4 items-start p-5 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-indigo-200 transition-all">
+                    <span className="shrink-0 w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-black shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">{s.step}</span>
+                    <div>
+                      <p className="text-xs font-black text-slate-800 leading-tight mb-1">{s.text}</p>
+                      <p className="text-[10px] font-medium text-slate-400">{s.sub}</p>
                     </div>
                   </div>
-                  <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                     <span className="bg-white px-4 py-2 rounded-full text-xs font-black text-indigo-600 shadow-xl">Painel de Integração MP</span>
-                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8 p-6 bg-slate-900 rounded-[2rem] text-white">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-white/10 rounded-lg"><Info size={18}/></div>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest">Informação Importante</h4>
                 </div>
-
-                <ol className="space-y-4">
-                  {[
-                    { step: '1', text: 'No Supabase, vá em Edge Functions e copie a URL pública da sua função.', link: 'https://supabase.com/dashboard/project/_/functions' },
-                    { step: '2', text: 'No Mercado Pago Developers, selecione sua aplicação.', link: 'https://www.mercadopago.com.br/developers/panel' },
-                    { step: '3', text: 'Clique em "Notificações" > "Webhooks".' },
-                    { step: '4', text: 'Cole a URL da sua Edge Function no campo "URL de retorno".' },
-                    { step: '5', text: 'Marque "Pagamentos" e "IPN" e salve as alterações.' }
-                  ].map((s, i) => (
-                    <li key={i} className="flex gap-4 items-start">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black">{s.step}</span>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-slate-600 leading-tight">{s.text}</p>
-                        {s.link && (
-                          <a href={s.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-black text-sky-600 uppercase hover:underline">
-                            Verificar no {s.link.includes('supabase') ? 'Supabase' : 'Mercado Pago'} <ExternalLink size={10}/>
-                          </a>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                <p className="text-xs font-medium text-slate-400 leading-relaxed">
+                  O sistema utiliza o gateway do Mercado Pago para gerar QRCodes dinâmicos para cada inquilino. Quando o pagamento é feito, o Mercado Pago avisa nossa URL de Webhook, e o sistema dá a baixa automaticamente no contrato e no financeiro.
+                </p>
+                <button className="mt-6 w-full py-3 bg-white text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-400 hover:text-white transition-all">
+                  Documentação da API
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Outras Abas */}
       {activeTab === 'logs' && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="font-bold text-slate-800">Histórico de Atividade</h3>
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="font-black text-slate-800 tracking-tight">Histórico de Auditoria</h3>
           </div>
           <div className="divide-y divide-slate-100">
             {MOCK_LOGS.map(log => (
-              <div key={log.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+              <div key={log.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className="p-2 bg-slate-100 rounded-lg text-slate-400">
+                  <div className="p-2.5 bg-slate-100 rounded-xl text-slate-400 shadow-inner">
                     <History size={18} />
                   </div>
                   <div>
-                    <p className="text-sm text-slate-700">
-                      <span className="font-bold text-slate-900">{log.user}</span> realizou 
-                      <span className="font-semibold text-indigo-600"> {log.action} </span> 
-                      em <span className="font-medium">{log.target}</span>
+                    <p className="text-sm text-slate-700 font-medium">
+                      <span className="font-black text-slate-900">{log.user}</span> • 
+                      <span className="text-indigo-600 font-black"> {log.action} </span> 
+                      em <span className="font-black">{log.target}</span>
                     </p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{log.time}</p>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">{log.time}</p>
                   </div>
                 </div>
-                <button className="text-xs font-bold text-indigo-600 hover:underline">Detalhes</button>
+                <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-50 hover:text-indigo-600 transition-all active:scale-95 shadow-sm">Detalhes</button>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'company' && (
-        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in duration-300 max-w-3xl">
-          <h3 className="font-bold text-slate-800 mb-6">Informações Institucionais</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Razão Social</label>
-                <input type="text" defaultValue="Luís Imóveis Gestão Imobiliária LTDA" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CNPJ</label>
-                <input type="text" defaultValue="12.345.678/0001-90" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CRECI Jurídico</label>
-                <input type="text" defaultValue="J-12345" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Endereço Sede</label>
-                <input type="text" defaultValue="Centro - Guaranésia, MG" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">E-mail Principal</label>
-                <input type="email" defaultValue="contato@luisimoveis.com.br" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Telefone/WhatsApp</label>
-                <input type="text" defaultValue="(35) 99999-0000" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 flex justify-end">
-            <button className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
-              Salvar Alterações
-            </button>
           </div>
         </div>
       )}

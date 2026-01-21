@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
@@ -23,394 +23,505 @@ import {
   ChevronDown,
   HelpCircle,
   MessageCircle,
-  FileSearch
+  FileSearch,
+  Loader2,
+  Heart,
+  Share2,
+  Calendar,
+  RefreshCw,
+  SearchX,
+  Tag
 } from 'lucide-react';
 
 const PORTAL_PROPERTIES = [
-  { id: '1', title: 'Casa de Alto Padrão - Vila Betel', loc: 'Vila Betel, Guaranésia', price: 'R$ 850.000', beds: 3, baths: 3, area: 250, img: 'https://picsum.photos/seed/lux1/800/600', tag: 'Venda' },
-  { id: '2', title: 'Apartamento Central Próximo à Praça', loc: 'Centro, Guaranésia', price: 'R$ 1.800/mês', beds: 2, baths: 1, area: 85, img: 'https://picsum.photos/seed/lux2/800/600', tag: 'Aluguel' },
-  { id: '3', title: 'Loteamento Residencial Novo', loc: 'Jardim Primavera, Guaranésia', price: 'R$ 120.000', beds: 0, baths: 0, area: 300, img: 'https://picsum.photos/seed/lux3/800/600', tag: 'Venda' },
-  { id: '4', title: 'Casa com Área Gourmet Completa', loc: 'Vila Rica, Guaranésia', price: 'R$ 2.500/mês', beds: 3, baths: 2, area: 180, img: 'https://picsum.photos/seed/lux4/800/600', tag: 'Aluguel' },
-];
-
-const FAQ_ITEMS = [
-  {
-    category: "Locação Facilitada",
-    questions: [
-      { q: "Quais documentos preciso para alugar um imóvel?", a: "Para pessoa física, solicitamos RG, CPF, Comprovante de Residência e de Renda (últimos 3 meses). Oferecemos diversas garantias como seguro fiança, título de capitalização ou fiador tradicional." },
-      { q: "Quanto tempo demora a análise cadastral?", a: "Nossa análise é digital e rápida. Geralmente, em até 24 horas úteis você já tem o retorno sobre a aprovação da locação em Guaranésia." }
-    ]
+  { 
+    id: '1', 
+    title: 'Casa de Alto Padrão - Vila Betel', 
+    loc: 'Vila Betel, Guaranésia', 
+    price: 'R$ 850.000', 
+    beds: 3, 
+    baths: 3, 
+    area: 250, 
+    parking: 2,
+    type: 'RESIDENTIAL',
+    img: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80', 
+    tag: 'Venda', 
+    description: 'Linda casa com acabamento premium, suíte master com closet e área gourmet integrada.' 
   },
-  {
-    category: "Compra & Financiamento",
-    questions: [
-      { q: "A imobiliária auxilia no processo de financiamento bancário?", a: "Sim! Cuidamos de toda a assessoria junto aos principais bancos (Caixa, BB, Itaú, etc.), desde a simulação até a assinatura da escritura." },
-      { q: "Posso usar meu FGTS na compra do imóvel?", a: "Sim, para imóveis residenciais urbanos e se você atender aos requisitos do programa, o FGTS pode ser usado tanto para a entrada quanto para amortizar o saldo devedor." }
-    ]
+  { 
+    id: '2', 
+    title: 'Apartamento Central Próximo à Praça', 
+    loc: 'Centro, Guaranésia', 
+    price: 'R$ 1.800/mês', 
+    beds: 2, 
+    baths: 1, 
+    area: 85, 
+    parking: 1,
+    type: 'RESIDENTIAL',
+    img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80', 
+    tag: 'Aluguel', 
+    description: 'Apartamento arejado, no coração da cidade. Segurança 24h e baixo custo de condomínio.' 
   },
-  {
-    category: "Vistorias & Entrega",
-    questions: [
-      { q: "Como funciona a vistoria de entrega?", a: "Realizamos uma vistoria fotográfica e descritiva minuciosa antes de você entrar e ao sair do imóvel, garantindo total transparência e segurança jurídica para ambas as partes." }
-    ]
-  }
+  { 
+    id: '3', 
+    title: 'Loteamento Residencial Novo', 
+    loc: 'Jardim Primavera, Guaranésia', 
+    price: 'R$ 120.000', 
+    beds: 0, 
+    baths: 0, 
+    area: 300, 
+    parking: 0,
+    type: 'LAND',
+    img: 'https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?auto=format&fit=crop&w=800&q=80', 
+    tag: 'Venda', 
+    description: 'Lote plano pronto para construir, infraestrutura completa e excelente valorização.' 
+  },
+  { 
+    id: '4', 
+    title: 'Casa com Área Gourmet Completa', 
+    loc: 'Vila Rica, Guaranésia', 
+    price: 'R$ 2.500/mês', 
+    beds: 4, 
+    baths: 2, 
+    area: 180, 
+    parking: 2,
+    type: 'RESIDENTIAL',
+    img: 'https://images.unsplash.com/photo-1560448204-61dc36dc98c8?auto=format&fit=crop&w=800&q=80', 
+    tag: 'Aluguel', 
+    description: 'Ideal para famílias que buscam conforto. Quintal amplo e churrasqueira profissional.' 
+  },
+  { 
+    id: '5', 
+    title: 'Ponto Comercial - Centro', 
+    loc: 'Centro, Guaranésia', 
+    price: 'R$ 4.500/mês', 
+    beds: 0, 
+    baths: 2, 
+    area: 120, 
+    parking: 3,
+    type: 'COMMERCIAL',
+    img: 'https://images.unsplash.com/photo-1582030024464-3259b6c0792a?auto=format&fit=crop&w=800&q=80', 
+    tag: 'Aluguel', 
+    description: 'Salão amplo para comércio ou escritório, excelente visibilidade e localização privilegiada.' 
+  },
 ];
 
 const Portal: React.FC = () => {
   const navigate = useNavigate();
   const [dealType, setDealType] = useState<'SALE' | 'RENT'>('SALE');
-  const [propertyType, setPropertyType] = useState('RESIDENTIAL');
+  const [propertyType, setPropertyType] = useState('ALL');
   const [bedrooms, setBedrooms] = useState('any');
   const [parking, setParking] = useState('any');
+  const [locationSearch, setLocationSearch] = useState('');
+  
+  // Inicializar com filtro de venda já aplicado
+  const [filteredResults, setFilteredResults] = useState(
+    PORTAL_PROPERTIES.filter(p => p.tag === 'Venda')
+  );
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openFaqIndex, setOpenFaqIndex] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
-  const toggleFaq = (index: string) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80; 
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect + window.pageYOffset;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const handleSearch = () => {
+    setIsSearching(true);
+    
+    setTimeout(() => {
+      const results = PORTAL_PROPERTIES.filter(p => {
+        const matchesDeal = (dealType === 'SALE' && p.tag === 'Venda') || (dealType === 'RENT' && p.tag === 'Aluguel');
+        const matchesType = propertyType === 'ALL' || p.type === propertyType;
+        const matchesBeds = bedrooms === 'any' || p.beds >= parseInt(bedrooms);
+        const matchesParking = parking === 'any' || p.parking >= parseInt(parking);
+        const matchesLocation = locationSearch === '' || 
+                               p.loc.toLowerCase().includes(locationSearch.toLowerCase()) || 
+                               p.title.toLowerCase().includes(locationSearch.toLowerCase());
+        
+        return matchesDeal && matchesType && matchesBeds && matchesParking && matchesLocation;
+      });
+
+      setFilteredResults(results);
+      setIsSearching(false);
+      
+      if (window.innerWidth < 768) {
+        scrollToSection('destaques');
+      }
+    }, 400);
+  };
+
+  // Disparar busca ao trocar tipo de negócio
+  useEffect(() => {
+    handleSearch();
+  }, [dealType]);
+
+  const clearFilters = () => {
+    setDealType('SALE');
+    setPropertyType('ALL');
+    setBedrooms('any');
+    setParking('any');
+    setLocationSearch('');
+    setFilteredResults(PORTAL_PROPERTIES.filter(p => p.tag === 'Venda'));
+  };
+
+  const handleWhatsAppContact = (msg: string = "Olá, vi um imóvel no site e gostaria de mais informações.") => {
+    const phone = "5535999990000";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   return (
     <div className="bg-white min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden">
-      {/* Header Responsivo */}
-      <nav className="absolute top-0 left-0 right-0 z-50 px-4 md:px-8 py-4 md:py-6 flex items-center justify-between bg-gradient-to-b from-black/60 via-black/30 to-transparent">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 md:p-2 bg-indigo-600 rounded-xl text-white">
-            <Home size={20} />
+      {/* Header Fixo */}
+      <nav className="fixed top-0 left-0 right-0 z-[60] px-4 md:px-8 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+          <div className="p-1.5 md:p-2 bg-indigo-600 rounded-xl text-white shadow-lg">
+            <Home size={18} />
           </div>
-          <span className="text-lg md:text-xl font-black text-white tracking-tighter">Luís <span className="text-indigo-400">Imóveis</span></span>
+          <span className="text-lg md:text-xl font-black text-slate-900 tracking-tighter">Luís <span className="text-indigo-600">Imóveis</span></span>
         </div>
         
         <div className="hidden md:flex items-center gap-8">
-           {['Comprar', 'Alugar', 'Lançamentos', 'FAQ', 'Sobre'].map(item => (
-             <a key={item} href={item === 'FAQ' ? '#faq' : '#'} className="text-sm font-black text-white uppercase tracking-widest hover:text-indigo-400 transition-colors">{item}</a>
-           ))}
+           <button onClick={() => { setDealType('SALE'); scrollToSection('hero'); }} className={`text-xs font-black uppercase tracking-widest transition-colors ${dealType === 'SALE' ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>Venda</button>
+           <button onClick={() => { setDealType('RENT'); scrollToSection('hero'); }} className={`text-xs font-black uppercase tracking-widest transition-colors ${dealType === 'RENT' ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>Locação</button>
+           <button onClick={() => scrollToSection('destaques')} className="text-xs font-black text-slate-500 uppercase tracking-widest hover:text-indigo-600 transition-colors">Imóveis</button>
            <button 
-             onClick={() => navigate('/')}
-             className="px-6 py-2.5 bg-white text-slate-900 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-xl"
+             onClick={() => navigate('/dashboard')}
+             className="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg"
            >
-             Acesso Restrito
+             Área Restrita
            </button>
         </div>
 
-        <button 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-white bg-white/10 rounded-lg backdrop-blur-sm"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2 text-slate-900 hover:bg-slate-100 rounded-lg">
+          <Menu size={24} />
         </button>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Menu Mobile */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-slate-950 flex flex-col p-8 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[70] bg-white animate-in slide-in-from-right duration-300 flex flex-col p-6">
           <div className="flex justify-between items-center mb-12">
-            <span className="text-xl font-black text-white tracking-tighter">Luís <span className="text-indigo-400">Imóveis</span></span>
-            <button onClick={() => setMobileMenuOpen(false)} className="text-white"><X size={32}/></button>
+            <span className="text-xl font-black text-slate-900">Navegação</span>
+            <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-slate-100 rounded-full"><X size={24}/></button>
           </div>
-          <div className="flex flex-col gap-6">
-            {['Comprar', 'Alugar', 'Lançamentos', 'FAQ', 'Sobre'].map(item => (
-               <a key={item} href={item === 'FAQ' ? '#faq' : '#'} onClick={() => setMobileMenuOpen(false)} className="text-2xl font-black text-white uppercase tracking-widest border-b border-white/10 pb-4">{item}</a>
-            ))}
-            <button 
-              onClick={() => navigate('/')}
-              className="mt-8 w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest"
-            >
-              Acesso Restrito
-            </button>
+          <div className="flex flex-col gap-4">
+            <button onClick={() => { setDealType('SALE'); setMobileMenuOpen(false); }} className="py-4 px-6 bg-slate-50 rounded-2xl text-left font-black uppercase text-sm tracking-widest">Comprar</button>
+            <button onClick={() => { setDealType('RENT'); setMobileMenuOpen(false); }} className="py-4 px-6 bg-slate-50 rounded-2xl text-left font-black uppercase text-sm tracking-widest">Alugar</button>
+            <button onClick={() => { scrollToSection('destaques'); setMobileMenuOpen(false); }} className="py-4 px-6 bg-slate-50 rounded-2xl text-left font-black uppercase text-sm tracking-widest">Destaques</button>
+            <button onClick={() => navigate('/dashboard')} className="py-4 px-6 bg-indigo-600 text-white rounded-2xl text-left font-black uppercase text-sm tracking-widest">Entrar no ERP</button>
           </div>
         </div>
       )}
 
-      {/* Hero Section */}
-      <section className="relative min-h-[100dvh] flex items-center justify-center text-white overflow-hidden py-16 px-4">
-        <img 
-          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80" 
-          alt="Luxury Real Estate" 
-          className="absolute inset-0 w-full h-full object-cover brightness-[0.4] scale-105"
-        />
-        <div className="relative z-10 w-full max-w-6xl text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          <h1 className="text-4xl md:text-7xl font-black mb-4 leading-tight md:leading-[0.9] tracking-tighter">
-            O lar perfeito em <span className="text-indigo-400 block md:inline">Guaranésia</span>
+      {/* Hero & Search Engine */}
+      <section id="hero" className="relative pt-32 pb-16 md:pt-48 md:pb-32 px-4 bg-slate-50 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 -z-10"></div>
+        <div className="max-w-6xl mx-auto text-center mb-16">
+          <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight mb-6">
+            Sua nova história começa em <span className="text-indigo-600">Guaranésia</span>
           </h1>
-          <p className="text-base md:text-xl mb-8 md:mb-12 text-slate-200 font-medium max-w-2xl mx-auto opacity-80 px-4">
-            A maior curadoria de imóveis exclusivos em Guaranésia e região sul de Minas Gerais.
+          <p className="text-slate-500 font-medium md:text-xl max-w-2xl mx-auto">
+            Explore os melhores imóveis da região com tecnologia e transparência.
           </p>
-          
-          {/* Search Card */}
-          <div className="bg-white/10 backdrop-blur-3xl p-4 md:p-6 rounded-[2rem] md:rounded-[3rem] border border-white/20 shadow-2xl max-w-6xl mx-auto text-left w-full">
-            <div className="flex gap-2 md:gap-4 mb-6">
-              <button 
-                onClick={() => setDealType('SALE')}
-                className={`flex-1 md:flex-none px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${dealType === 'SALE' ? 'bg-white text-slate-900 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
-              >
-                Comprar
-              </button>
-              <button 
-                onClick={() => setDealType('RENT')}
-                className={`flex-1 md:flex-none px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${dealType === 'RENT' ? 'bg-white text-slate-900 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
-              >
-                Alugar
-              </button>
-            </div>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-              <div className="md:col-span-4 space-y-2">
-                <label className="text-[10px] font-black text-white/60 uppercase tracking-widest ml-2">Onde?</label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Bairro (Centro, Vila Betel...)" 
-                    className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/10 rounded-2xl text-white placeholder-white/30 focus:bg-white/20 outline-none transition-all font-bold text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-white/60 uppercase tracking-widest ml-2">Tipo</label>
-                <div className="relative">
-                  <Layers className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
-                  <select 
-                    value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/10 rounded-2xl text-white font-bold text-sm appearance-none outline-none focus:bg-white/20 transition-all cursor-pointer"
-                  >
-                    <option value="RESIDENTIAL" className="text-slate-900">Residencial</option>
-                    <option value="COMMERCIAL" className="text-slate-900">Comercial</option>
-                    <option value="LAND" className="text-slate-900">Lote</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-white/60 uppercase tracking-widest ml-2">Quartos</label>
-                <div className="relative">
-                  <Bed className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
-                  <select 
-                    value={bedrooms}
-                    onChange={(e) => setBedrooms(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/10 rounded-2xl text-white font-bold text-sm appearance-none outline-none focus:bg-white/20 transition-all cursor-pointer"
-                  >
-                    <option value="any" className="text-slate-900">Qualquer</option>
-                    <option value="1" className="text-slate-900">1+ Quartos</option>
-                    <option value="2" className="text-slate-900">2+ Quartos</option>
-                    <option value="3" className="text-slate-900">3+ Quartos</option>
-                    <option value="4" className="text-slate-900">4+ Quartos</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-white/60 uppercase tracking-widest ml-2">Vagas</label>
-                <div className="relative">
-                  <Car className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
-                  <select 
-                    value={parking}
-                    onChange={(e) => setParking(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/10 rounded-2xl text-white font-bold text-sm appearance-none outline-none focus:bg-white/20 transition-all cursor-pointer"
-                  >
-                    <option value="any" className="text-slate-900">Qualquer</option>
-                    <option value="1" className="text-slate-900">1+ Vagas</option>
-                    <option value="2" className="text-slate-900">2+ Vagas</option>
-                    <option value="3" className="text-slate-900">3+ Vagas</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <button className="w-full py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/40 flex items-center justify-center gap-2 active:scale-95">
-                  <Search size={18} />
-                  Buscar
-                </button>
-              </div>
-            </div>
+        {/* Engine de Busca Aprimorada */}
+        <div className="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-900/10 border border-slate-100 relative z-10">
+          <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-100 pb-6">
+            <button 
+              type="button"
+              onClick={() => setDealType('SALE')}
+              className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${dealType === 'SALE' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+            >
+              Comprar
+            </button>
+            <button 
+              type="button"
+              onClick={() => setDealType('RENT')}
+              className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${dealType === 'RENT' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+            >
+              Alugar
+            </button>
           </div>
-          
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 md:gap-8 opacity-60">
-            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"><CheckCircle2 size={14} className="text-indigo-400" /> Vistorias Oficiais</div>
-            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"><Sparkles size={14} className="text-indigo-400" /> Avaliação via IA</div>
-            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"><BadgeCheck size={14} className="text-indigo-400" /> Guaranésia - MG</div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+            <div className="md:col-span-4 space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                <MapPin size={12} className="text-indigo-600"/> Localização
+              </label>
+              <input 
+                type="text" 
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                placeholder="Ex: Vila Betel ou Centro" 
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+              />
+            </div>
+
+            <div className="md:col-span-3 space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                <Layers size={12} className="text-indigo-600"/> Tipo de Imóvel
+              </label>
+              <select 
+                value={propertyType}
+                onChange={(e) => setPropertyType(e.target.value)}
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all cursor-pointer appearance-none"
+              >
+                <option value="ALL">Qualquer Tipo</option>
+                <option value="RESIDENTIAL">Residencial</option>
+                <option value="COMMERCIAL">Comercial</option>
+                <option value="LAND">Terreno / Lote</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-3 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                  <Bed size={12} className="text-indigo-600"/> Quartos
+                </label>
+                <select 
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none cursor-pointer"
+                >
+                  <option value="any">Todos</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                  <option value="4">4+</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                  <Car size={12} className="text-indigo-600"/> Vagas
+                </label>
+                <select 
+                  value={parking}
+                  onChange={(e) => setParking(e.target.value)}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none cursor-pointer"
+                >
+                  <option value="any">Todos</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <button 
+                type="button"
+                onClick={handleSearch}
+                disabled={isSearching}
+                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+              >
+                {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                Buscar
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Properties Section */}
-      <section className="py-16 md:py-32 px-4 md:px-6 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 md:mb-16 gap-4">
-          <div className="max-w-xl">
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight tracking-tighter mb-4">Destaques da Região</h2>
-            <p className="text-slate-500 font-medium">Imóveis selecionados em Guaranésia com as melhores condições de financiamento e locação facilitada.</p>
+      {/* Resultados da Busca */}
+      <section id="destaques" className="py-24 px-4 max-w-7xl mx-auto scroll-mt-20">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+              <Sparkles size={12} /> Curadoria Especial
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter">
+              {filteredResults.length > 0 ? 'Encontramos para você' : 'Sem resultados'}
+            </h2>
+            <p className="text-slate-500 font-medium mt-2">
+              {filteredResults.length > 0 
+                ? `Mostrando ${filteredResults.length} imóveis disponíveis em Guaranésia e região.` 
+                : 'Ajuste seus filtros e tente novamente.'}
+            </p>
           </div>
-          <button 
-            className="group flex items-center gap-2 text-indigo-600 font-black uppercase tracking-widest text-[10px] md:text-xs hover:text-indigo-700 transition-colors"
-          >
-            Ver catálogo completo <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </button>
+          {filteredResults.length !== PORTAL_PROPERTIES.length && (
+            <button 
+              type="button"
+              onClick={clearFilters}
+              className="px-6 py-3 border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center gap-2"
+            >
+              <RefreshCw size={14} /> Limpar Filtros
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-          {PORTAL_PROPERTIES.map((prop) => (
-            <div key={prop.id} className="group cursor-pointer">
-              <div className="relative h-64 md:h-[22rem] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden mb-6 shadow-xl shadow-slate-200 border border-slate-100">
-                <img src={prop.img} alt={prop.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                <div className="absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 bg-white/95 backdrop-blur rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 shadow-xl">
-                  {prop.tag}
+        {filteredResults.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {filteredResults.map((prop) => (
+              <div 
+                key={prop.id} 
+                onClick={() => setSelectedProperty(prop)}
+                className="group bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-900/5 transition-all duration-500 cursor-pointer flex flex-col"
+              >
+                <div className="relative h-64 overflow-hidden">
+                  <img src={prop.img} alt={prop.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-white/95 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest text-indigo-600 shadow-lg">
+                    {prop.tag}
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setSelectedProperty(prop); }}
+                      className="w-full py-3 bg-white text-slate-900 font-black rounded-xl text-[10px] uppercase tracking-widest active:scale-95 transition-transform translate-y-2 group-hover:translate-y-0 duration-500"
+                    >
+                      Ver Ficha Completa
+                    </button>
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6 md:p-8">
-                   <button className="w-full py-3 md:py-4 bg-white text-slate-900 font-black rounded-2xl text-[10px] md:text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-transform">
-                     Ver Detalhes
-                   </button>
-                </div>
-              </div>
-              <h3 className="text-lg md:text-xl font-black text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors tracking-tight">{prop.title}</h3>
-              <div className="flex items-center gap-2 text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4">
-                <MapPin size={12} className="text-indigo-500" />
-                {prop.loc}
-              </div>
-              <div className="flex items-center gap-6 md:gap-8 text-slate-600 text-xs font-black mb-6 bg-slate-50 p-4 rounded-2xl shadow-inner border border-slate-100">
-                <span className="flex items-center gap-2.5"><Bed size={22} className="text-indigo-500" /> {prop.beds}</span>
-                <span className="flex items-center gap-2.5"><Bath size={22} className="text-indigo-500" /> {prop.baths}</span>
-                <span className="flex items-center gap-2.5"><Maximize size={22} className="text-indigo-500" /> {prop.area}m²</span>
-              </div>
-              <p className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter">{prop.price}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+                
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors mb-2 line-clamp-1">{prop.title}</h3>
+                    <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                      <MapPin size={12} className="text-indigo-500" /> {prop.loc}
+                    </div>
+                  </div>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-16 md:py-32 px-4 md:px-6 bg-slate-50 scroll-mt-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 shadow-sm">
-              <HelpCircle size={14} /> Dúvidas Comuns
-            </div>
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter leading-tight mb-4">Perguntas Frequentes</h2>
-            <p className="text-slate-500 font-medium">Tudo o que você precisa saber para alugar ou comprar com segurança em Guaranésia.</p>
-          </div>
+                  <div className="grid grid-cols-3 gap-2 p-4 bg-slate-50 rounded-2xl mb-6 shadow-inner border border-slate-100">
+                    <div className="flex flex-col items-center gap-1">
+                      <Bed size={16} className="text-indigo-500" />
+                      <span className="text-[10px] font-black text-slate-700">{prop.beds > 0 ? prop.beds : '-'} Qts</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 border-x border-slate-200">
+                      <Car size={16} className="text-indigo-500" />
+                      <span className="text-[10px] font-black text-slate-700">{prop.parking > 0 ? prop.parking : '-'} Vag</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <Maximize size={16} className="text-indigo-500" />
+                      <span className="text-[10px] font-black text-slate-700">{prop.area}m²</span>
+                    </div>
+                  </div>
 
-          <div className="space-y-12">
-            {FAQ_ITEMS.map((category, catIndex) => (
-              <div key={catIndex} className="space-y-4">
-                <h3 className="text-xs font-black text-indigo-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                  <FileSearch size={16} /> {category.category}
-                </h3>
-                <div className="space-y-3">
-                  {category.questions.map((faq, faqIndex) => {
-                    const id = `faq-${catIndex}-${faqIndex}`;
-                    const isOpen = openFaqIndex === id;
-                    return (
-                      <div key={faqIndex} className={`bg-white rounded-2xl border transition-all duration-300 ${isOpen ? 'border-indigo-200 shadow-xl shadow-indigo-900/5' : 'border-slate-100 shadow-sm hover:border-indigo-100'}`}>
-                        <button 
-                          onClick={() => toggleFaq(id)}
-                          className="w-full px-6 py-5 flex items-center justify-between text-left gap-4"
-                        >
-                          <span className="text-sm md:text-base font-black text-slate-800 tracking-tight">{faq.q}</span>
-                          <div className={`shrink-0 p-1.5 rounded-lg bg-slate-50 text-slate-400 transition-all ${isOpen ? 'rotate-180 bg-indigo-600 text-white' : ''}`}>
-                            <ChevronDown size={18} />
-                          </div>
-                        </button>
-                        <div className={`overflow-hidden transition-all duration-500 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                          <div className="px-6 pb-6 text-slate-500 text-sm md:text-base font-medium leading-relaxed">
-                            {faq.a}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
+                    <span className="text-xl font-black text-slate-900 tracking-tighter">{prop.price}</span>
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowRight size={16} />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-
-          <div className="mt-16 p-8 bg-indigo-600 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl shadow-indigo-200 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-125 transition-transform duration-1000">
-               <MessageCircle size={160} />
+        ) : (
+          <div className="py-32 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
+            <div className="p-10 bg-slate-50 rounded-full text-slate-200 mb-8">
+              <SearchX size={80} />
             </div>
-            <div className="relative z-10 text-center md:text-left">
-              <h4 className="text-xl md:text-2xl font-black mb-2 tracking-tight">Ainda tem alguma dúvida?</h4>
-              <p className="text-indigo-100 text-sm font-medium opacity-90">Nossa equipe de especialistas está pronta para te atender.</p>
-            </div>
-            <button className="relative z-10 px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-2">
-              Falar com Especialista <ArrowRight size={18} />
+            <h3 className="text-2xl font-black text-slate-900 mb-2">Ops! Nenhum imóvel encontrado</h3>
+            <p className="text-slate-500 font-medium mb-10 max-w-md mx-auto">Tente remover alguns filtros ou buscar em outro bairro de Guaranésia.</p>
+            <button 
+              type="button"
+              onClick={clearFilters}
+              className="px-10 py-5 bg-indigo-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-slate-900 transition-all active:scale-95"
+            >
+              Ver todos os imóveis
             </button>
           </div>
-        </div>
+        )}
       </section>
 
-      {/* Local Info Section */}
-      <section className="bg-white py-16 md:py-32 px-4 md:px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-24">
-          <div className="flex-1 space-y-8">
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter leading-tight">Excelência Imobiliária em Guaranésia</h2>
-            <div className="space-y-6">
-              {[
-                { t: 'Atendimento Humanizado', d: 'Entendemos a realidade da nossa cidade e as necessidades de quem vive aqui.' },
-                { t: 'Conhecimento Local', d: 'Especialistas nos bairros de Guaranésia, garantindo a melhor avaliação para seu imóvel.' },
-                { t: 'Transparência Total', d: 'Processos claros e suporte jurídico em todas as etapas da negociação.' }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black">{i+1}</div>
-                  <div>
-                    <h4 className="font-black text-slate-900 text-lg">{item.t}</h4>
-                    <p className="text-slate-500 font-medium text-sm">{item.d}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 relative">
-            <div className="aspect-square bg-indigo-600 rounded-[3rem] rotate-3 overflow-hidden shadow-2xl">
-              <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" className="w-full h-full object-cover -rotate-3 scale-110" alt="Consultoria" />
-            </div>
-            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl border border-slate-100 hidden md:block">
-               <p className="text-3xl font-black text-indigo-600">+100</p>
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contratos Ativos</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-white pt-16 md:pt-32 pb-8 md:pb-16 px-4 md:px-6 border-t border-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16 mb-16 md:mb-24">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-6 md:mb-8">
-                <div className="p-2 bg-indigo-600 rounded-xl text-white">
-                  <Home size={28} />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">Luís <span className="text-indigo-600">Imóveis</span></h3>
+      {/* Footer Simples */}
+      <footer className="bg-slate-900 py-24 px-4 text-white">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="md:col-span-2 space-y-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-indigo-600 rounded-xl">
+                <Home size={24} />
               </div>
-              <p className="text-slate-500 max-w-sm mb-8 md:mb-10 font-medium leading-relaxed">Referência em inteligência imobiliária e gestão de ativos em Guaranésia e toda a região sul mineira.</p>
-              <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 md:w-12 md:h-12 rounded-2xl border border-slate-100 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm"><Instagram size={20} /></a>
-                <a href="#" className="w-10 h-10 md:w-12 md:h-12 rounded-2xl border border-slate-100 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm"><Facebook size={20} /></a>
-              </div>
+              <span className="text-2xl font-black tracking-tighter">Luís <span className="text-indigo-400">Imóveis</span></span>
             </div>
-            <div>
-              <h5 className="font-black text-slate-900 mb-6 md:mb-8 uppercase tracking-[0.2em] text-xs">Atendimento</h5>
-              <ul className="space-y-4 text-slate-500 text-sm font-bold">
-                <li className="flex items-center gap-3"><Phone size={18} className="text-indigo-600" /> (35) 99999-0000</li>
-                <li className="flex items-center gap-3"><Mail size={18} className="text-indigo-600" /> contato@luisimoveis.com.br</li>
-                <li className="flex items-center gap-3"><MapPin size={18} className="text-indigo-600" /> Centro, Guaranésia - MG</li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-black text-slate-900 mb-6 md:mb-8 uppercase tracking-[0.2em] text-xs">Acesso</h5>
-              <button 
-                onClick={() => navigate('/')}
-                className="text-indigo-600 font-black uppercase text-xs tracking-widest hover:underline"
-              >
-                Portal Administrativo
-              </button>
-            </div>
+            <p className="text-slate-400 font-medium max-w-sm">Tecnologia e confiança na palma da sua mão. Líder em negociações imobiliárias em Guaranésia - MG.</p>
           </div>
-          <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] text-center md:text-left">
-            <p>© 2024 Luís Imóveis Guaranésia. Soluções Imobiliárias.</p>
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Atendimento</h4>
+            <ul className="space-y-4 text-sm font-medium text-slate-300">
+              <li className="flex items-center gap-3"><Phone size={18} className="text-indigo-500"/> (35) 99999-0000</li>
+              <li className="flex items-center gap-3"><Mail size={18} className="text-indigo-500"/> contato@luisimoveis.com.br</li>
+            </ul>
           </div>
         </div>
       </footer>
+
+      {/* Modal de Detalhes do Imóvel */}
+      {selectedProperty && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-5xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-300 flex flex-col md:flex-row">
+            <div className="md:w-3/5 h-[40vh] md:h-auto relative shrink-0">
+              <img src={selectedProperty.img} className="w-full h-full object-cover" alt={selectedProperty.title} />
+              <button onClick={() => setSelectedProperty(null)} className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-full text-slate-900 md:hidden"><X size={24}/></button>
+            </div>
+            <div className="p-8 md:p-12 overflow-y-auto flex-1 flex flex-col">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 inline-block">Ref: {selectedProperty.id}00{selectedProperty.id}</span>
+                  <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">{selectedProperty.title}</h3>
+                </div>
+                <button onClick={() => setSelectedProperty(null)} className="p-3 hover:bg-slate-50 rounded-2xl hidden md:block text-slate-300 hover:text-slate-900 transition-all"><X size={32}/></button>
+              </div>
+
+              <div className="space-y-8 flex-1">
+                <div className="flex items-center gap-2 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                  <MapPin size={18} className="text-indigo-500" /> {selectedProperty.loc}
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
+                  <div className="flex flex-col items-center gap-2">
+                    <Bed className="text-indigo-500" size={24} />
+                    <span className="text-xs font-black text-slate-900">{selectedProperty.beds} Quartos</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 border-x border-slate-200">
+                    <Car className="text-indigo-500" size={24} />
+                    <span className="text-xs font-black text-slate-900">{selectedProperty.parking} Vagas</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <Maximize className="text-indigo-500" size={24} />
+                    <span className="text-xs font-black text-slate-900">{selectedProperty.area}m² Área</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Descrição Detalhada</h4>
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedProperty.description}</p>
+                </div>
+
+                <div className="pt-8 border-t border-slate-100">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Preço de {selectedProperty.tag}</p>
+                   <p className="text-4xl font-black text-indigo-600 tracking-tighter">{selectedProperty.price}</p>
+                </div>
+              </div>
+
+              <div className="mt-12 flex flex-col sm:flex-row gap-4">
+                <button 
+                  type="button"
+                  onClick={() => handleWhatsAppContact(`Olá! Vi o imóvel "${selectedProperty.title}" no portal e gostaria de visitá-lo.`)}
+                  className="flex-1 py-5 bg-indigo-600 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-900 transition-all shadow-xl shadow-indigo-100 active:scale-95 text-xs uppercase tracking-widest"
+                >
+                  <MessageCircle size={20} /> Agendar Visita
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

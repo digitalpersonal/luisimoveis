@@ -12,7 +12,8 @@ export const getFinancialSettings = (): FinancialSettings => {
   return {
     discountRate: 0.10,      // 10% desconto
     fineRate: 0.02,          // 2% multa
-    monthlyInterestRate: 0.01 // 1% ao mês
+    monthlyInterestRate: 0.01, // 1% ao mês
+    gracePeriod: 0           // Sem carência por padrão
   };
 };
 
@@ -60,6 +61,7 @@ export const calculateOverdueValues = (nominalValue: number, dueDateStr: string)
   const discountValue = nominalValue * settings.discountRate;
   const isOverdue = today > dueDate;
 
+  // Se não estiver atrasado, aplica desconto de pontualidade
   if (!isOverdue) {
     return {
       originalValue: nominalValue,
@@ -73,8 +75,27 @@ export const calculateOverdueValues = (nominalValue: number, dueDateStr: string)
     };
   }
 
+  // Cálculo de dias de atraso
   const diffTime = Math.abs(today.getTime() - dueDate.getTime());
   const daysOverdue = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Verifica se o atraso está dentro do período de carência (tolerância)
+  const isWithinGracePeriod = daysOverdue <= settings.gracePeriod;
+
+  if (isWithinGracePeriod) {
+    return {
+      originalValue: nominalValue,
+      discount: 0, 
+      dueDate: dueDateStr,
+      fine: 0,
+      interest: 0,
+      totalValue: nominalValue, // Valor nominal, mas sem desconto e sem multa
+      daysOverdue,
+      isOverdue: true
+    };
+  }
+
+  // Se passou da carência, calcula Multa e Juros
   const interestPerDayPercent = settings.monthlyInterestRate / 30;
   const fineValue = nominalValue * settings.fineRate;
   const interestValue = nominalValue * (interestPerDayPercent * daysOverdue);
@@ -96,7 +117,6 @@ export const calculateOverdueValues = (nominalValue: number, dueDateStr: string)
  * Simula a criação de um pagamento Pix via API do Mercado Pago.
  */
 export const createMercadoPagoPix = async (amount: number, description: string) => {
-  // Em um ambiente real, aqui usaríamos o accessToken configurado
   const settings = getMercadoPagoSettings();
   console.log('Usando Public Key:', settings.publicKey);
 

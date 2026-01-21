@@ -1,0 +1,8 @@
+{
+  "name": "Luís Imóveis - ERP & Portal Imobiliário",
+  "description": "Um sistema completo de gestão imobiliária (ERP) integrado a um portal público, com controle financeiro, gestão de contratos, vendas, locações e integração inteligente.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
